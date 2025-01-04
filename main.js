@@ -11,7 +11,7 @@ function onOpen() {
 }
 
 function getMetrics() {
-  getMetricsForDays(1, 1, 'Metrics');
+  getMetricsForDays(1, 1, 'History');
 }
 
 function getHistory() {
@@ -25,18 +25,19 @@ function getMetricsForDays(fromDaysAgo, toDaysAgo, tabName) {
   var sheet = ss.getSheetByName(tabName);
   var fitService = getFitService();
   
-  // Process in 30-day chunks
+  // Process in 30-day chunks, but start from oldest data
   const CHUNK_SIZE = 30;
-  for (let i = fromDaysAgo; i <= toDaysAgo; i += CHUNK_SIZE) {
-    const chunkEnd = Math.min(i + CHUNK_SIZE - 1, toDaysAgo);
+  // Start from the oldest data (toDaysAgo) and move towards newer data
+  for (let i = toDaysAgo; i >= fromDaysAgo; i -= CHUNK_SIZE) {
+    const chunkStart = Math.max(i - CHUNK_SIZE + 1, fromDaysAgo);
     
     var start = new Date();
     start.setHours(0,0,0,0);
-    start.setDate(start.getDate() - chunkEnd);
+    start.setDate(start.getDate() - i);  // Start from older date
 
     var end = new Date();
     end.setHours(23,59,59,999);
-    end.setDate(end.getDate() - i);
+    end.setDate(end.getDate() - chunkStart);  // End at newer date
     
     var request = {
       "aggregateBy": [
@@ -76,7 +77,7 @@ function getMetricsForDays(fromDaysAgo, toDaysAgo, tabName) {
       Utilities.sleep(1000);
       
     } catch (error) {
-      console.error('Error fetching data for chunk:', i, 'to', chunkEnd, error);
+      console.error('Error fetching data for chunk:', i, 'to', chunkStart, error);
       // Continue with next chunk even if this one fails
       continue;
     }
