@@ -63,15 +63,12 @@ function getMetricsForDays(fromDaysAgo, toDaysAgo, tabName) {
       var json = JSON.parse(response.getContentText());
       
       for(var b = 0; b < json.bucket.length; b++) {
-        var bucketDate = new Date(parseInt(json.bucket[b].startTimeMillis, 10));
-        var weight = -1;
-        
+        // Only process if there's weight data
         if (json.bucket[b].dataset[0].point.length > 0) {
-          weight = (json.bucket[b].dataset[0].point[0].value[0].fpVal * 2.20462).toFixed(1);
-        }
-        
-        if (weight !== -1) {  // Only add row if weight data exists
-          sheet.appendRow([bucketDate, weight]);
+          var bucketDate = new Date(parseInt(json.bucket[b].startTimeMillis, 10));
+          var formattedDate = Utilities.formatDate(bucketDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+          var weight = (json.bucket[b].dataset[0].point[0].value[0].fpVal * 2.20462).toFixed(1);
+          sheet.appendRow([formattedDate, weight]);
         }
       }
       
